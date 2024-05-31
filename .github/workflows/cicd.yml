@@ -7,13 +7,17 @@ on:
 jobs:
     build:
         name: Build
-        runs-on: ubuntu-latest
+        runs-on: [ubuntu-latest]
         environment: PROD
         
 
         steps:
             - name: Checkout
               uses: actions/checkout@v3
+
+
+            - name: Creating .env file
+              run: echo "${{secrets.MY_ENVIRONMENT}}" >> .env
 
             - name: Docker login
               run: docker login -u ${{secrets.DOCKER_USERNAME}} -p ${{secrets.DOCKER_PASSWORD}}
@@ -27,7 +31,7 @@ jobs:
 
     deploy:
         needs: build
-        runs-on: aws-ec2
+        runs-on: [aws-ec2]
         environment: PROD
         steps:
             - name: Pull docker image
@@ -38,13 +42,3 @@ jobs:
             
             - name: Run docker container
               run: docker run -d -p 5000:5000 --name nodeContainer echoech0/nodeapp
-
-            - name: Creating .env file
-              run: |
-                  docker exec -it nodeContainer /bin/sh
-                  touch .env
-                  echo "${{secrets.MY_ENVIRONMENT}}" > .env
-
-            - name: Restarting Docker Container
-              run: docker restart nodeContainer
-            
